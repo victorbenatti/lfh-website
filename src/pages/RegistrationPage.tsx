@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ParticleBackground } from '../components/ParticleBackground';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Users, Trophy, AlertTriangle, MessageCircle, CheckCircle, Info } from 'lucide-react';
+import { ArrowLeft, User, Users, Trophy } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Footer } from '../components/Footer';
 

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Video, ShieldCheck, Apple, Star, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -6,32 +6,38 @@ const FEATURES = [
   {
     icon: Camera,
     title: 'Fotógrafo Profissional',
-    desc: 'Cobertura fotográfica premium de todos os jogos. Tenha cliques impecáveis de cada lance seu garantidos na areia.'
+    desc: 'Cobertura fotográfica premium de todos os jogos. Tenha cliques impecáveis de cada lance seu garantidos na areia.',
+    image: '/images/fotografo.webp'
   },
   {
     icon: ShieldCheck,
     title: 'Arbitagram VIP',
-    desc: 'Arbitragem profissional em todos os jogos com sistema de pontos ao vivo para não perder nenhum detalhe do placar.'
+    desc: 'Arbitragem profissional em todos os jogos com sistema de pontos ao vivo para não perder nenhum detalhe do placar.',
+    image: '/images/arbitragem.webp'
   },
   {
     icon: Star,
     title: 'Estrutura de Ponta',
-    desc: 'Obtenha a melhor experiência de jogo nas 5 quadras de areia perfeitas da Koa House, com iluminação de estádio, bar completo e lounge.'
+    desc: 'Obtenha a melhor experiência de jogo nas 5 quadras de areia perfeitas da Koa House, com iluminação de estádio, bar completo e lounge.',
+    image: '/images/estrutura.webp'
   },
   {
     icon: Video,
     title: 'Videomaker',
-    desc: 'Reels, highlights e lances de tirar o fôlego registrados por nossos profissionais de vídeo cobrindo as melhores quadras.'
+    desc: 'Reels, highlights e lances de tirar o fôlego registrados por nossos profissionais de vídeo cobrindo as melhores quadras.',
+    image: '/images/filmmaker.webp'
   },
   {
     icon: Apple,
     title: 'Água e Frutas',
-    desc: 'Mesa contínua de hidratação e nutrição à disposição de todos os atletas participantes, assegurando sua performance sempre máxima.'
+    desc: 'Mesa contínua de hidratação e nutrição à disposição de todos os atletas participantes, assegurando sua performance sempre máxima.',
+    image: '/images/frutas.webp'
   },
   {
     icon: Trophy,
     title: 'Premiação de Elite',
-    desc: 'Um complexo Sistema de Ranking Anual listando seu nome e garantindo prêmios insanos para os maiores destaques de cada Etapa.'
+    desc: 'Um complexo Sistema de Ranking Anual listando seu nome e garantindo prêmios insanos para os maiores destaques de cada Etapa.',
+    image: '/images/premiacao.webp'
   }
 ];
 
@@ -96,10 +102,15 @@ export const Info: React.FC = () => {
                 <div className="w-full md:w-[90%] lg:w-[85%] bg-brand-black border border-brand-surface-light flex flex-col md:flex-row items-center h-auto md:h-[480px] overflow-hidden group-hover/card shadow-2xl">
                    
                    {/* Left Visual Area */}
-                   <div className="w-full md:w-5/12 bg-brand-surface/50 border-b md:border-b-0 md:border-r border-brand-surface-light p-12 md:p-16 h-64 md:h-full flex flex-col items-center justify-center relative overflow-hidden transition-colors">
-                      <div className="absolute top-6 left-6 text-brand-white/10 font-black text-6xl tracking-tighter">0{idx + 1}</div>
-                      <feature.icon className="w-48 h-48 text-brand-white/5 absolute -right-12 -bottom-12 transform -rotate-12 group-hover/card:rotate-0 transition-transform duration-700" />
-                      <feature.icon className="w-24 h-24 text-yellow-500 relative z-10 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]" />
+                   <div className="w-full md:w-5/12 bg-brand-surface/50 border-b md:border-b-0 md:border-r border-brand-surface-light h-64 md:h-full relative overflow-hidden transition-colors">
+                      <div className="absolute top-6 left-6 z-20 text-brand-white/80 font-black text-6xl tracking-tighter mix-blend-overlay">0{idx + 1}</div>
+                      <img 
+                        src={feature.image} 
+                        alt={feature.title} 
+                        className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700 opacity-60 group-hover/card:opacity-90"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:via-brand-black/50 md:to-brand-black"></div>
+                      <feature.icon className="absolute bottom-6 right-6 w-10 h-10 text-yellow-500 drop-shadow-md z-20" />
                    </div>
 
                    {/* Right Content Area */}

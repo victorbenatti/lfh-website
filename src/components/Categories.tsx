@@ -54,11 +54,7 @@ export const Categories: React.FC = () => {
                   </li>
                 ))}
               </ul>
-              <div className="p-6 pt-0">
-                <button className="w-full py-3 border border-brand-surface-light text-brand-white text-sm uppercase tracking-widest font-bold hover:bg-brand-white hover:text-brand-black transition-colors">
-                  Ver Detalhes
-                </button>
-              </div>
+
             </motion.div>
           ))}
         </div>
