@@ -61,16 +61,16 @@ export const Ranking: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6"
+          className="flex flex-col md:flex-row justify-between items-center md:items-end mb-12 gap-6 text-center md:text-left"
         >
-          <div>
-            <div className="flex items-center gap-3 mb-4 text-brand-gray">
+          <div className="flex flex-col items-center md:items-start">
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-4 text-brand-gray">
               <Trophy className="w-6 h-6" />
               <span className="uppercase tracking-widest font-semibold text-sm">Circuito 2026</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold">Ranking Anual</h2>
           </div>
-          <p className="text-brand-metallic text-sm md:text-right max-w-xs">
+          <p className="text-brand-metallic text-sm text-center md:text-right max-w-xs">
             Acompanhe a corrida pelo título. Os melhores do ano se enfrentam no Finals.
           </p>
         </motion.div>
