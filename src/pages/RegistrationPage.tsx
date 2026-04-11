@@ -45,7 +45,7 @@ const formatPhone = (value: string) => {
 export const RegistrationPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(true);
+  const [success, setSuccess] = useState(false);
 
   // Form states Atleta 1
   const [player1Name, setPlayer1Name] = useState('');
@@ -417,11 +417,21 @@ export const RegistrationPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-6">
+            <div className="pt-4 space-y-6">
+              {/* Resumo do Valor */}
+              <div className="bg-brand-black border border-brand-surface-light p-6 text-center">
+                <div className="text-xs text-brand-gray uppercase tracking-widest font-bold mb-2">Valor Total da Inscrição</div>
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <span className="text-3xl md:text-4xl font-black text-yellow-500">R$ 320,00</span>
+                  <span className="text-lg text-brand-white font-medium self-end pb-1">a dupla</span>
+                </div>
+                <div className="text-sm text-brand-metallic">(Equivalente a R$ 160,00 por atleta)</div>
+              </div>
+
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full px-8 py-5 bg-brand-white text-brand-black font-bold uppercase tracking-widest text-sm hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-8 py-5 bg-brand-white text-brand-black font-black uppercase tracking-widest text-sm hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Processando Inscrição...' : 'Confirmar Inscrição da Dupla'}
               </button>
