@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
-import { Settings, Check, Clock, Link as LinkIcon } from 'lucide-react';
+import { Settings, Check, Clock, Link as LinkIcon, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Atleta {
@@ -29,6 +29,12 @@ interface Inscricao {
 export const AdminDashboard: React.FC = () => {
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterCategoria, setFilterCategoria] = useState('TODAS');
+
+  const CATEGORIAS = [
+    'TODAS', 'MASC_ESTREANTE', 'MASC_INICIANTE', 'MASC_INTERMEDIARIO', 
+    'MASC_BC', 'MISTO_ESTREANTE', 'MISTO_INICIANTE', 'FEMININO'
+  ];
 
   const fetchInscricoes = async () => {
     setLoading(true);
@@ -97,6 +103,25 @@ export const AdminDashboard: React.FC = () => {
           </Link>
         </div>
 
+        {/* Toolbar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 bg-brand-surface border border-brand-surface-light p-4">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-brand-metallic" />
+            <span className="text-brand-gray text-xs uppercase tracking-widest font-bold">Filtrar por Categoria:</span>
+          </div>
+          <select 
+             className="w-full sm:w-auto bg-brand-black border border-brand-surface-light p-2 text-brand-white focus:outline-none focus:border-brand-white transition-colors uppercase text-sm font-semibold tracking-wider"
+             value={filterCategoria}
+             onChange={(e) => setFilterCategoria(e.target.value)}
+          >
+            {CATEGORIAS.map(cat => (
+              <option key={cat} value={cat}>
+                {cat === 'TODAS' ? 'Todas as Categorias' : formatCategoria(cat)}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {loading ? (
           <div className="text-center py-20 text-brand-metallic animate-pulse">Carregando inscrições...</div>
         ) : (
@@ -117,11 +142,11 @@ export const AdminDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-brand-surface-light">
-                  {inscricoes.length === 0 ? (
+                  {inscricoes.filter(sub => filterCategoria === 'TODAS' || sub.categoria === filterCategoria).length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-brand-metallic">Nenhuma inscrição encontrada na edição.</td>
+                      <td colSpan={5} className="py-8 text-center text-brand-metallic">Nenhuma inscrição encontrada para o filtro selecionado.</td>
                     </tr>
-                  ) : inscricoes.map((sub) => (
+                  ) : inscricoes.filter(sub => filterCategoria === 'TODAS' || sub.categoria === filterCategoria).map((sub) => (
                     <tr key={sub.id} className="hover:bg-brand-surface-light/20 transition-colors">
                       <td className="py-4 px-6">
                         <div className="font-bold">{formatCategoria(sub.categoria)}</div>
