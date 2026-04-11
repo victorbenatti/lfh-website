@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ParticleBackground } from '../components/ParticleBackground';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Users, Trophy, AlertTriangle, MessageCircle } from 'lucide-react';
+import { ArrowLeft, User, Users, Trophy, AlertTriangle, MessageCircle, CheckCircle, Info } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { Footer } from '../components/Footer';
 
 const CATEGORY_UI = [
   { name: 'Masculino', levels: ['Estreante', 'Iniciante', 'Intermediário', 'A+B'] },
@@ -45,7 +46,6 @@ const formatPhone = (value: string) => {
 export const RegistrationPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   // Form states Atleta 1
   const [player1Name, setPlayer1Name] = useState('');
@@ -63,6 +63,57 @@ export const RegistrationPage: React.FC = () => {
   
   const [category, setCategory] = useState('Masculino');
   const [level, setLevel] = useState('Estreante');
+
+  const [activeEdicaoId, setActiveEdicaoId] = useState<string | null>(null);
+  const [player1Discount, setPlayer1Discount] = useState(false);
+  const [player2Discount, setPlayer2Discount] = useState(false);
+
+  useEffect(() => {
+    supabase.from('edicoes').select('id').order('created_at', { ascending: false }).limit(1).maybeSingle()
+      .then(({ data }) => setActiveEdicaoId(data?.id || null));
+  }, []);
+
+  const checkDiscount = async (cpf: string, edicaoId: string) => {
+    if (cpf.length < 14) return false;
+    const { data: atleta } = await supabase.from('atletas').select('id').eq('cpf', cpf).maybeSingle();
+    if (!atleta) return false;
+    
+    const { data: duplas1 } = await supabase.from('duplas').select('id').eq('atleta_1_id', atleta.id);
+    const { data: duplas2 } = await supabase.from('duplas').select('id').eq('atleta_2_id', atleta.id);
+    const duplaIds = [...(duplas1 || []), ...(duplas2 || [])].map(d => d.id);
+    
+    if (duplaIds.length === 0) return false;
+
+    const { data: inscricoes } = await supabase.from('inscricoes')
+      .select('id')
+      .eq('edicao_id', edicaoId)
+      .in('dupla_id', duplaIds)
+      .limit(1);
+
+    return !!(inscricoes && inscricoes.length > 0);
+  };
+
+  useEffect(() => {
+    if (!activeEdicaoId) return;
+    if (player1Cpf.length === 14) {
+      checkDiscount(player1Cpf, activeEdicaoId).then(setPlayer1Discount);
+    } else {
+      setPlayer1Discount(false);
+    }
+  }, [player1Cpf, activeEdicaoId]);
+
+  useEffect(() => {
+    if (!activeEdicaoId) return;
+    if (player2Cpf.length === 14) {
+      checkDiscount(player2Cpf, activeEdicaoId).then(setPlayer2Discount);
+    } else {
+      setPlayer2Discount(false);
+    }
+  }, [player2Cpf, activeEdicaoId]);
+
+  const p1Cost = player1Discount ? 100 : 160;
+  const p2Cost = player2Discount ? 100 : 160;
+  const totalPrice = p1Cost + p2Cost;
 
   const currentLevels = CATEGORY_UI.find(c => c.name === category)?.levels || [];
 
@@ -90,7 +141,8 @@ export const RegistrationPage: React.FC = () => {
         throw new Error('Nenhuma edição de torneio encontrada no banco de dados. O administrador deve criar uma etapa primeiro em "edicoes".');
       }
 
-      // 1. Criar Atleta 1
+      // 1. Obter Atleta 1
+      let p1Id;
       const { data: p1Data, error: p1Error } = await supabase
         .from('atletas')
         .insert({ 
@@ -102,9 +154,18 @@ export const RegistrationPage: React.FC = () => {
         })
         .select('id')
         .single();
-      if (p1Error) throw p1Error;
+        
+      if (p1Error && p1Error.code === '23505') {
+        const { data: existingP1 } = await supabase.from('atletas').select('id').eq('cpf', player1Cpf).single();
+        p1Id = existingP1?.id;
+      } else if (p1Error) {
+        throw p1Error;
+      } else {
+        p1Id = p1Data?.id;
+      }
 
-      // 2. Criar Atleta 2
+      // 2. Obter Atleta 2
+      let p2Id;
       const { data: p2Data, error: p2Error } = await supabase
         .from('atletas')
         .insert({ 
@@ -116,10 +177,19 @@ export const RegistrationPage: React.FC = () => {
         })
         .select('id')
         .single();
-      if (p2Error) throw p2Error;
+        
+      if (p2Error && p2Error.code === '23505') {
+        const { data: existingP2 } = await supabase.from('atletas').select('id').eq('cpf', player2Cpf).single();
+        p2Id = existingP2?.id;
+      } else if (p2Error) {
+        throw p2Error;
+      } else {
+        p2Id = p2Data?.id;
+      }
 
       // 3. Criar Dupla garantindo a regra de ordem (atleta_1_id < atleta_2_id)
-      const ids = [p1Data.id, p2Data.id].sort();
+      if (!p1Id || !p2Id) throw new Error("Erro ao identificar UUIDs dos atletas.");
+      const ids = [p1Id, p2Id].sort();
       const atleta1_id = ids[0];
       const atleta2_id = ids[1];
 
@@ -150,14 +220,17 @@ export const RegistrationPage: React.FC = () => {
       const categoriaDb = CATEGORY_MAP[`${category} - ${level}`];
       if (!categoriaDb) throw new Error('Mapeamento de categoria inválido.');
 
-      const { error: subError } = await supabase
+      const { data: inscricaoData, error: subError } = await supabase
         .from('inscricoes')
         .insert({
           dupla_id: finalDuplaId,
           edicao_id: edicaoData.id,
           categoria: categoriaDb,
+          valor_inscricao: totalPrice,
           status: 'PENDENTE'
-        });
+        })
+        .select('id')
+        .single();
         
       // Ignorar erro se eles já estão inscritos nessa mesma edição e categoria
       if (subError && subError.code === '23505') {
@@ -166,7 +239,10 @@ export const RegistrationPage: React.FC = () => {
         throw subError;
       }
 
-      setSuccess(true);
+      setPlayer1Name(''); setPlayer1Email(''); setPlayer1Phone(''); setPlayer1Cpf(''); setPlayer1Dob('');
+      setPlayer2Name(''); setPlayer2Email(''); setPlayer2Phone(''); setPlayer2Cpf(''); setPlayer2Dob('');
+      
+      navigate(`/pagamento/${inscricaoData.id}`);
     } catch (err: any) {
       console.error('Erro ao realizar inscrição:', err);
       // Extrair a mensagem apropriada
@@ -181,74 +257,7 @@ export const RegistrationPage: React.FC = () => {
     }
   };
 
-  if (success) {
-    const wppMsg = encodeURIComponent("Olá! Fiz a inscrição para a LFH pelo site, segue comprovante:");
-    const orgPhone = "5519982796873"; // Mude para o número do organizador
-    const pixKey = "ligafutevoleihortolandia@gmail.com"; // Mude para a chave real
 
-    return (
-      <div className="min-h-screen bg-brand-black text-brand-white selection:bg-brand-white selection:text-brand-black flex flex-col items-center justify-center p-4">
-        <ParticleBackground />
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }} 
-          animate={{ opacity: 1, scale: 1 }} 
-          className="relative z-10 bg-brand-surface border border-yellow-500/30 p-8 md:p-10 max-w-xl w-full text-center shadow-[0_0_40px_rgba(234,179,8,0.05)]"
-        >
-          <AlertTriangle className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
-          <h2 className="text-3xl font-black mb-4">Quase lá!</h2>
-          <p className="text-brand-metallic mb-8">
-            Sua dupla foi pré-registrada na categoria <strong className="text-brand-white">{category} - {level}</strong>. 
-            Para <strong>confirmar definitivamente</strong> sua inscrição, faça o pagamento via PIX e envie no WhatsApp.
-          </p>
-          
-          <div className="bg-brand-black border border-brand-surface-light p-6 mb-8 text-left">
-            <div className="flex flex-col mb-6">
-              <div className="text-sm text-brand-gray uppercase tracking-widest font-bold mb-3">Valor da Inscrição</div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-brand-surface border border-brand-surface-light p-4 flex flex-col justify-center">
-                   <div className="text-brand-metallic text-xs uppercase font-bold tracking-widest mb-1">Por Atleta</div>
-                   <div className="text-2xl font-black text-white">R$ 160,00</div>
-                </div>
-                <div className="bg-yellow-500/10 border border-yellow-500/50 p-4 flex flex-col justify-center">
-                   <div className="text-yellow-500 text-xs uppercase font-bold tracking-widest mb-1">Dupla Completa</div>
-                   <div className="text-2xl font-black text-yellow-500">R$ 320,00</div>
-                </div>
-              </div>
-              <p className="text-xs text-brand-metallic mt-3">* Você pode efetuar o pagamento da sua parte isolada ou da dupla integral no mesmo comprovante.</p>
-            </div>
-            
-            <div className="text-sm text-brand-gray uppercase tracking-widest font-bold mb-2">Chave PIX (E-mail)</div>
-            <div className="bg-brand-surface p-4 border border-brand-surface-light mb-4 w-full flex items-center justify-center">
-               <span className="font-mono text-brand-white text-xs sm:text-sm md:text-lg tracking-wider font-bold select-all break-all text-center">{pixKey}</span>
-            </div>
-            
-            <div className="bg-brand-surface-light/10 p-4 border-l-2 border-yellow-500">
-              <p className="text-xs text-brand-gray uppercase tracking-widest font-bold mb-1">Beneficiário:</p>
-              <p className="text-sm text-brand-white font-medium mb-3">Victor Benatti Alves Dos Santos</p>
-              <p className="text-xs text-brand-gray uppercase tracking-widest font-bold mb-1">Instituição:</p>
-              <p className="text-sm text-brand-white font-medium">Mercado Pago</p>
-            </div>
-          </div>
-
-          <a 
-            href={`https://wa.me/${orgPhone}?text=${wppMsg}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-[#25D366] text-white font-bold uppercase tracking-widest text-sm hover:bg-[#20bd5a] transition-colors mb-6"
-          >
-            <MessageCircle className="w-5 h-5" /> Enviar Comprovante no WhatsApp
-          </a>
-
-          <button 
-            onClick={() => navigate('/')} 
-            className="text-brand-gray text-xs hover:text-brand-white uppercase tracking-widest font-bold underline"
-          >
-            Voltar ao Início
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-brand-black text-brand-white selection:bg-brand-white selection:text-brand-black flex flex-col">
@@ -270,9 +279,16 @@ export const RegistrationPage: React.FC = () => {
             className="mb-12"
           >
             <h1 className="text-4xl md:text-5xl font-black mb-4">Inscrição de Dupla</h1>
-            <p className="text-brand-metallic text-lg">
+            <p className="text-brand-metallic text-lg mb-6">
               Preencha os dados dos dois atletas. A dupla fixada aqui servirá como base para o Ranking Anual da LFH.
             </p>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-brand-surface border border-yellow-500/30 p-4 inline-flex">
+              <span className="w-2 h-2 rounded-full bg-yellow-500 flex-shrink-0 animate-pulse mt-1.5 sm:mt-0"></span>
+              <p className="text-sm text-brand-white">
+                Jogando mais de uma categoria? A inscrição da <strong>2ª categoria</strong> cai para <strong className="text-yellow-500">R$ 100,00</strong>. O desconto aplica no fim da página!
+              </p>
+            </div>
           </motion.div>
 
           <motion.form 
@@ -448,24 +464,35 @@ export const RegistrationPage: React.FC = () => {
               <div className="bg-brand-black border border-brand-surface-light p-6 text-center">
                 <div className="text-xs text-brand-gray uppercase tracking-widest font-bold mb-2">Valor Total da Inscrição</div>
                 <div className="flex items-center justify-center gap-2 mb-1">
-                  <span className="text-3xl md:text-4xl font-black text-yellow-500">R$ 320,00</span>
+                  <span className="text-3xl md:text-4xl font-black text-yellow-500">R$ {totalPrice},00</span>
                   <span className="text-lg text-brand-white font-medium self-end pb-1">a dupla</span>
                 </div>
-                <div className="text-sm text-brand-metallic">(Equivalente a R$ 160,00 por atleta)</div>
+                <div className="text-sm text-brand-metallic">
+                  {totalPrice === 320 
+                    ? '(Equivalente a R$ 160,00 por atleta)' 
+                    : totalPrice === 260 
+                      ? '(Um dos atletas aplicou Desconto de 2ª Modalidade)' 
+                      : '(O Desconto de 2ª Modalidade foi aplicado para ambos)'}
+                </div>
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={loading}
-                className="w-full px-8 py-5 bg-brand-white text-brand-black font-black uppercase tracking-widest text-sm hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full py-5 flex items-center justify-center gap-3 font-black text-lg uppercase tracking-widest transition-all ${
+                  loading 
+                  ? 'bg-brand-surface-light text-brand-gray cursor-not-allowed'
+                  : 'bg-brand-white text-brand-black hover:bg-gray-200'
+                }`}
               >
-                {loading ? 'Processando Inscrição...' : 'Confirmar Inscrição da Dupla'}
+                {loading ? 'Processando Inscrição...' : <>Confirmar Inscrição e Ir Para o Pagamento</>}
               </button>
             </div>
-            
           </motion.form>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };
