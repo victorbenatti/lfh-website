@@ -49,12 +49,14 @@ export const RegistrationPage: React.FC = () => {
 
   // Form states Atleta 1
   const [player1Name, setPlayer1Name] = useState('');
+  const [player1Email, setPlayer1Email] = useState('');
   const [player1Phone, setPlayer1Phone] = useState('');
   const [player1Cpf, setPlayer1Cpf] = useState('');
   const [player1Dob, setPlayer1Dob] = useState('');
 
   // Form states Atleta 2
   const [player2Name, setPlayer2Name] = useState('');
+  const [player2Email, setPlayer2Email] = useState('');
   const [player2Phone, setPlayer2Phone] = useState('');
   const [player2Cpf, setPlayer2Cpf] = useState('');
   const [player2Dob, setPlayer2Dob] = useState('');
@@ -92,7 +94,8 @@ export const RegistrationPage: React.FC = () => {
       const { data: p1Data, error: p1Error } = await supabase
         .from('atletas')
         .insert({ 
-          nome_completo: player1Name, 
+          nome_completo: player1Name,
+          email: player1Email,
           whatsapp: player1Phone,
           cpf: player1Cpf,
           data_nascimento: player1Dob 
@@ -105,7 +108,8 @@ export const RegistrationPage: React.FC = () => {
       const { data: p2Data, error: p2Error } = await supabase
         .from('atletas')
         .insert({ 
-          nome_completo: player2Name, 
+          nome_completo: player2Name,
+          email: player2Email,
           whatsapp: player2Phone,
           cpf: player2Cpf,
           data_nascimento: player2Dob 
@@ -327,6 +331,17 @@ export const RegistrationPage: React.FC = () => {
                   />
                 </div>
                 <div>
+                  <label className="block text-brand-gray text-xs uppercase tracking-widest font-semibold mb-2">E-mail</label>
+                  <input 
+                    type="email" 
+                    placeholder="Ex: joao@email.com"
+                    className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors placeholder:text-brand-surface-light"
+                    value={player1Email}
+                    onChange={e => setPlayer1Email(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
                   <label className="block text-brand-gray text-xs uppercase tracking-widest font-semibold mb-2">WhatsApp</label>
                   <input 
                     type="tel" 
@@ -377,6 +392,17 @@ export const RegistrationPage: React.FC = () => {
                     className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors placeholder:text-brand-surface-light"
                     value={player2Name}
                     onChange={e => setPlayer2Name(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-brand-gray text-xs uppercase tracking-widest font-semibold mb-2">E-mail</label>
+                  <input 
+                    type="email" 
+                    placeholder="Ex: maria@email.com"
+                    className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors placeholder:text-brand-surface-light"
+                    value={player2Email}
+                    onChange={e => setPlayer2Email(e.target.value)}
                     required
                   />
                 </div>

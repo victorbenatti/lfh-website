@@ -1,18 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ParticleBackground } from '../components/ParticleBackground';
 import { Footer } from '../components/Footer';
 import { Trophy, ArrowLeft, Info as InfoIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const MOCK_RANKING = [
-  { pos: 1, name: 'Lucas & Matheus', points: 1000 },
-  { pos: 2, name: 'Rafael & João', points: 800 },
-  { pos: 3, name: 'Pedro & Thiago', points: 650 },
-  { pos: 4, name: 'Gabriel & Felipe', points: 500 },
-  { pos: 5, name: 'Bruno & Diego', points: 100 },
-  { pos: 6, name: 'Caio & Henrique', points: 100 },
-];
+import { supabase } from '../lib/supabaseClient';
 
 const CATEGORIES = [
   { name: 'Masculino', levels: ['Estreante', 'Iniciante', 'Intermediário', 'A+B'] },
@@ -20,9 +12,27 @@ const CATEGORIES = [
   { name: 'Feminino', levels: ['Livre'] },
 ];
 
+const CATEGORY_MAP: Record<string, string> = {
+  'Masculino - Estreante': 'MASC_ESTREANTE',
+  'Masculino - Iniciante': 'MASC_INICIANTE',
+  'Masculino - Intermediário': 'MASC_INTERMEDIARIO',
+  'Masculino - A+B': 'MASC_BC',
+  'Misto - Estreante': 'MISTO_ESTREANTE',
+  'Misto - Iniciante': 'MISTO_INICIANTE',
+  'Feminino - Livre': 'FEMININO'
+};
+
+interface RankingEntry {
+  atleta_1: string;
+  atleta_2: string;
+  total_pontos: number;
+}
+
 export const RankingPage: React.FC = () => {
   const [selectedCat, setSelectedCat] = useState('Masculino');
   const [selectedLevel, setSelectedLevel] = useState('A+B');
+  const [rankingData, setRankingData] = useState<RankingEntry[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const currentLevels = CATEGORIES.find(c => c.name === selectedCat)?.levels || [];
 
@@ -30,6 +40,53 @@ export const RankingPage: React.FC = () => {
     setSelectedCat(cat);
     setSelectedLevel(CATEGORIES.find(c => c.name === cat)?.levels[0] || '');
   };
+
+  useEffect(() => {
+    const fetchRanking = async () => {
+      setLoading(true);
+      const dbCat = CATEGORY_MAP[`${selectedCat} - ${selectedLevel}`];
+      
+      if (!dbCat) {
+        setRankingData([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // 1. Filtrar globalmente as inscrições já pagas
+        const { data: paidInscricoes, error: paidError } = await supabase
+          .from('inscricoes')
+          .select('dupla_id')
+          .eq('status', 'PAGO');
+          
+        if (paidError) throw paidError;
+        
+        const paidIds = (paidInscricoes || []).map(p => p.dupla_id);
+
+        if (paidIds.length === 0) {
+          setRankingData([]);
+          return;
+        }
+
+        // 2. Procurar na tela de Ranking atual apenas essas duplas ativas
+        const { data, error } = await supabase
+          .from('ranking_anual')
+          .select('*')
+          .eq('categoria', dbCat)
+          .in('dupla_id', paidIds)
+          .order('total_pontos', { ascending: false });
+
+        if (error) throw error;
+        setRankingData(data || []);
+      } catch (err) {
+        console.error('Erro ao carregar ranking:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRanking();
+  }, [selectedCat, selectedLevel]);
 
   return (
     <div className="min-h-screen bg-brand-black text-brand-white selection:bg-brand-white selection:text-brand-black flex flex-col">
@@ -151,42 +208,60 @@ export const RankingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Table */}
           <motion.div 
              key={selectedCat + selectedLevel}
              initial={{ opacity: 0, x: -20 }}
              animate={{ opacity: 1, x: 0 }}
-             className="bg-brand-surface border border-brand-surface-light rounded-sm overflow-hidden"
+             className="bg-brand-surface border border-brand-surface-light rounded-sm overflow-hidden min-h-[300px] flex flex-col"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[600px]">
-                <thead>
-                  <tr className="bg-brand-surface-light/50 border-b border-brand-surface-light">
-                    <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider w-24 text-center">Pos</th>
-                    <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider">Atleta / Dupla</th>
-                    <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider text-right">Pontos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {MOCK_RANKING.map((item, idx) => (
-                    <tr 
-                      key={idx}
-                      className="border-b border-brand-surface-light hover:bg-brand-surface-light/30 transition-colors"
-                    >
-                      <td className="py-5 px-6 text-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${item.pos === 1 ? 'bg-brand-white text-brand-black ring-4 ring-brand-white/20' : item.pos <= 3 ? 'bg-brand-surface-light text-brand-white' : 'bg-transparent text-brand-metallic'}`}>
-                          {item.pos}
-                        </span>
-                      </td>
-                      <td className="py-5 px-6 font-medium text-brand-white text-lg">{item.name}</td>
-                      <td className="py-5 px-6 font-mono text-right text-brand-metallic">
-                        <span className="text-brand-white font-bold">{item.points}</span> pts
-                      </td>
+            {loading ? (
+              <div className="flex-1 flex justify-center items-center text-brand-metallic p-12">
+                Buscando histórico do Ranking...
+              </div>
+            ) : rankingData.length > 0 ? (
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left border-collapse min-w-[600px]">
+                  <thead>
+                    <tr className="bg-brand-surface-light/50 border-b border-brand-surface-light">
+                      <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider w-24 text-center">Pos</th>
+                      <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider">Atleta / Dupla</th>
+                      <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider text-right">Pontos</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {rankingData.map((item, idx) => {
+                      const pos = idx + 1;
+                      return (
+                        <tr 
+                          key={idx}
+                          className="border-b border-brand-surface-light hover:bg-brand-surface-light/30 transition-colors"
+                        >
+                          <td className="py-5 px-6 text-center">
+                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${pos === 1 ? 'bg-brand-white text-brand-black ring-4 ring-brand-white/20' : pos <= 3 ? 'bg-brand-surface-light text-brand-white' : 'bg-transparent text-brand-metallic'}`}>
+                              {pos}
+                            </span>
+                          </td>
+                          <td className="py-5 px-6 font-medium text-brand-white text-lg">{item.atleta_1} & {item.atleta_2}</td>
+                          <td className="py-5 px-6 font-mono text-right text-brand-metallic">
+                            <span className="text-brand-white font-bold">{item.total_pontos}</span> pts
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-12 text-center h-full my-auto">
+                <div className="w-16 h-16 bg-brand-surface-light rounded-full flex items-center justify-center mb-6 ring-4 ring-brand-surface-light/30">
+                  <Trophy className="w-8 h-8 text-brand-metallic" />
+                </div>
+                <h3 className="text-2xl font-bold text-brand-white mb-3">Nenhuma dupla inscrita</h3>
+                <p className="text-brand-metallic max-w-lg mx-auto text-lg leading-relaxed">
+                  A tabela para a categoria <strong className="text-brand-white">{selectedCat} - {selectedLevel}</strong> ainda está vazia. Inscreva-se agora e garanta sua posição com 0 pontos acumulativos!
+                </p>
+              </div>
+            )}
           </motion.div>
           
         </div>
@@ -196,3 +271,4 @@ export const RankingPage: React.FC = () => {
     </div>
   );
 };
+

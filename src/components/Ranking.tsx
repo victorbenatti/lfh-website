@@ -1,15 +1,57 @@
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+
+interface RankingEntry {
+  atleta_1: string;
+  atleta_2: string;
+  total_pontos: number;
+}
 
 export const Ranking: React.FC = () => {
-  const rankingData = [
-    { pos: 1, name: 'Lucas & Matheus', points: 2500, trend: 'up' },
-    { pos: 2, name: 'Rafael & João', points: 2350, trend: 'up' },
-    { pos: 3, name: 'Pedro & Thiago', points: 2100, trend: 'down' },
-    { pos: 4, name: 'Gabriel & Felipe', points: 1950, trend: 'same' },
-    { pos: 5, name: 'Bruno & Diego', points: 1800, trend: 'up' },
-  ];
+  const [rankingData, setRankingData] = useState<RankingEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRanking = async () => {
+      try {
+        // 1. Pega apenas os IDs das duplas que pagaram
+        const { data: paidInscricoes, error: paidError } = await supabase
+          .from('inscricoes')
+          .select('dupla_id')
+          .eq('status', 'PAGO');
+          
+        if (paidError) throw paidError;
+        
+        const paidIds = (paidInscricoes || []).map(p => p.dupla_id);
+
+        // Se ninguém pagou ainda, retorna vazio.
+        if (paidIds.length === 0) {
+          setRankingData([]);
+          return;
+        }
+
+        // 2. Busca o ranking com IN() usando a array gerada
+        const { data, error } = await supabase
+          .from('ranking_anual')
+          .select('*')
+          .in('dupla_id', paidIds)
+          .order('total_pontos', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+        setRankingData(data || []);
+      } catch (err) {
+        console.error('Erro ao carregar ranking:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRanking();
+  }, []);
 
   return (
     <section className="py-32 px-4 relative z-10 bg-brand-surface/30 border-y border-brand-surface-light">
@@ -40,39 +82,55 @@ export const Ranking: React.FC = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="bg-brand-surface border border-brand-surface-light rounded-sm overflow-hidden"
         >
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="bg-brand-surface-light/50 border-b border-brand-surface-light">
-                  <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider w-24 text-center">Pos</th>
-                  <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider">Atleta / Dupla</th>
-                  <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider text-right">Pontos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankingData.map((item, idx) => (
-                  <motion.tr 
-                    key={idx}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: idx * 0.1 }}
-                    className="border-b border-brand-surface-light hover:bg-brand-surface-light/30 transition-colors"
-                  >
-                    <td className="py-5 px-6 text-center">
-                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${item.pos <= 3 ? 'bg-brand-white text-brand-black' : 'bg-brand-surface-light text-brand-metallic'}`}>
-                        {item.pos}
-                      </span>
-                    </td>
-                    <td className="py-5 px-6 font-medium text-brand-white text-lg">{item.name}</td>
-                    <td className="py-5 px-6 font-mono text-right text-brand-metallic">
-                      <span className="text-brand-white font-bold">{item.points}</span> pts
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {loading ? (
+            <div className="p-12 text-center text-brand-metallic">Carregando ranking...</div>
+          ) : rankingData.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr className="bg-brand-surface-light/50 border-b border-brand-surface-light">
+                    <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider w-24 text-center">Pos</th>
+                    <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider">Atleta / Dupla</th>
+                    <th className="py-4 px-6 text-brand-gray font-semibold text-sm uppercase tracking-wider text-right">Pontos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankingData.map((item, idx) => {
+                    const pos = idx + 1;
+                    return (
+                      <motion.tr 
+                        key={idx}
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: idx * 0.1 }}
+                        className="border-b border-brand-surface-light hover:bg-brand-surface-light/30 transition-colors"
+                      >
+                        <td className="py-5 px-6 text-center">
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${pos <= 3 ? 'bg-brand-white text-brand-black' : 'bg-brand-surface-light text-brand-metallic'}`}>
+                            {pos}
+                          </span>
+                        </td>
+                        <td className="py-5 px-6 font-medium text-brand-white text-lg">{item.atleta_1} & {item.atleta_2}</td>
+                        <td className="py-5 px-6 font-mono text-right text-brand-metallic">
+                          <span className="text-brand-white font-bold">{item.total_pontos}</span> pts
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="p-12 text-center flex flex-col items-center justify-center">
+              <div className="w-16 h-16 bg-brand-surface-light rounded-full flex items-center justify-center mb-6">
+                <Trophy className="w-8 h-8 text-brand-metallic" />
+              </div>
+              <p className="text-brand-metallic max-w-md mx-auto">
+                Nenhuma dupla inscrita ainda. Seja o primeiro a liderar o Ranking!
+              </p>
+            </div>
+          )}
           
           <div className="p-4 bg-brand-surface-light/20 text-center border-t border-brand-surface-light">
             <Link to="/ranking" className="text-brand-gray hover:text-brand-white text-sm font-semibold uppercase tracking-wider transition-colors inline-block pb-1 border-b border-transparent hover:border-brand-white">
@@ -84,3 +142,4 @@ export const Ranking: React.FC = () => {
     </section>
   );
 };
+
