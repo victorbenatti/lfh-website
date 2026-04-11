@@ -45,7 +45,7 @@ const formatPhone = (value: string) => {
 export const RegistrationPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState(true);
 
   // Form states Atleta 1
   const [player1Name, setPlayer1Name] = useState('');
@@ -179,8 +179,8 @@ export const RegistrationPage: React.FC = () => {
 
   if (success) {
     const wppMsg = encodeURIComponent("Olá! Fiz a inscrição para a LFH pelo site, segue comprovante:");
-    const orgPhone = "5519999999999"; // Mude para o número do organizador
-    const pixKey = "LFH.futevolei@banco.com.br"; // Mude para a chave real
+    const orgPhone = "5519982796873"; // Mude para o número do organizador
+    const pixKey = "ligafutevoleihortolandia@gmail.com"; // Mude para a chave real
 
     return (
       <div className="min-h-screen bg-brand-black text-brand-white selection:bg-brand-white selection:text-brand-black flex flex-col items-center justify-center p-4">
@@ -198,18 +198,32 @@ export const RegistrationPage: React.FC = () => {
           </p>
           
           <div className="bg-brand-black border border-brand-surface-light p-6 mb-8 text-left">
-            <div className="flex justify-between items-end mb-6">
-              <div>
-                <div className="text-sm text-brand-gray uppercase tracking-widest font-bold mb-1">Valor da Inscrição</div>
-                <div className="text-3xl md:text-4xl font-black text-yellow-500">R$ 160,00</div>
+            <div className="flex flex-col mb-6">
+              <div className="text-sm text-brand-gray uppercase tracking-widest font-bold mb-3">Valor da Inscrição</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-brand-surface border border-brand-surface-light p-4 flex flex-col justify-center">
+                   <div className="text-brand-metallic text-xs uppercase font-bold tracking-widest mb-1">Por Atleta</div>
+                   <div className="text-2xl font-black text-white">R$ 160,00</div>
+                </div>
+                <div className="bg-yellow-500/10 border border-yellow-500/50 p-4 flex flex-col justify-center">
+                   <div className="text-yellow-500 text-xs uppercase font-bold tracking-widest mb-1">Dupla Completa</div>
+                   <div className="text-2xl font-black text-yellow-500">R$ 320,00</div>
+                </div>
               </div>
+              <p className="text-xs text-brand-metallic mt-3">* Você pode efetuar o pagamento da sua parte isolada ou da dupla integral no mesmo comprovante.</p>
             </div>
             
-            <div className="text-sm text-brand-gray uppercase tracking-widest font-bold mb-2">Sua Chave PIX</div>
-            <div className="flex items-center justify-center bg-brand-surface p-4 border border-brand-surface-light mb-2">
-               <span className="font-mono text-brand-white text-lg tracking-wider font-bold">{pixKey}</span>
+            <div className="text-sm text-brand-gray uppercase tracking-widest font-bold mb-2">Chave PIX (E-mail)</div>
+            <div className="bg-brand-surface p-4 border border-brand-surface-light mb-4 w-full flex items-center justify-center">
+               <span className="font-mono text-brand-white text-xs sm:text-sm md:text-lg tracking-wider font-bold select-all break-all text-center">{pixKey}</span>
             </div>
-            <p className="text-xs text-brand-metallic text-center">* Enviar para Liga Futevôlei Hortolândia</p>
+            
+            <div className="bg-brand-surface-light/10 p-4 border-l-2 border-yellow-500">
+              <p className="text-xs text-brand-gray uppercase tracking-widest font-bold mb-1">Beneficiário:</p>
+              <p className="text-sm text-brand-white font-medium mb-3">Victor Benatti Alves Dos Santos</p>
+              <p className="text-xs text-brand-gray uppercase tracking-widest font-bold mb-1">Instituição:</p>
+              <p className="text-sm text-brand-white font-medium">Mercado Pago</p>
+            </div>
           </div>
 
           <a 
