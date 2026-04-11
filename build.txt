@@ -1,0 +1,7 @@
+
+> lfh-landingpage@0.0.0 build
+> tsc -b && vite build
+
+src/App.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/Footer.tsx(2,10): error TS2305: Module '"lucide-react"' has no exported member 'Instagram'.
+src/components/Footer.tsx(2,21): error TS2305: Module '"lucide-react"' has no exported member 'Youtube'.
