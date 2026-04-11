@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ParticleBackground } from '../components/ParticleBackground';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, User, Users, Trophy } from 'lucide-react';
+import { ArrowLeft, User, Users, Trophy, AlertTriangle, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 const CATEGORY_UI = [
@@ -178,23 +178,52 @@ export const RegistrationPage: React.FC = () => {
   };
 
   if (success) {
+    const wppMsg = encodeURIComponent("Olá! Fiz a inscrição para a LFH pelo site, segue comprovante:");
+    const orgPhone = "5519999999999"; // Mude para o número do organizador
+    const pixKey = "LFH.futevolei@banco.com.br"; // Mude para a chave real
+
     return (
       <div className="min-h-screen bg-brand-black text-brand-white selection:bg-brand-white selection:text-brand-black flex flex-col items-center justify-center p-4">
         <ParticleBackground />
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }} 
           animate={{ opacity: 1, scale: 1 }} 
-          className="relative z-10 bg-brand-surface border border-brand-surface-light p-10 max-w-lg w-full text-center"
+          className="relative z-10 bg-brand-surface border border-yellow-500/30 p-8 md:p-10 max-w-xl w-full text-center shadow-[0_0_40px_rgba(234,179,8,0.05)]"
         >
-          <CheckCircle2 className="w-20 h-20 text-brand-white mx-auto mb-6" />
-          <h2 className="text-3xl font-black mb-4">Inscrição Recebida!</h2>
+          <AlertTriangle className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
+          <h2 className="text-3xl font-black mb-4">Quase lá!</h2>
           <p className="text-brand-metallic mb-8">
-            Sua dupla foi registrada com sucesso na categoria <strong className="text-brand-white">{category} - {level}</strong>. 
-            Nossa equipe entrará em contato via WhatsApp para confirmar o pagamento.
+            Sua dupla foi pré-registrada na categoria <strong className="text-brand-white">{category} - {level}</strong>. 
+            Para <strong>confirmar definitivamente</strong> sua inscrição, faça o pagamento via PIX e envie no WhatsApp.
           </p>
+          
+          <div className="bg-brand-black border border-brand-surface-light p-6 mb-8 text-left">
+            <div className="flex justify-between items-end mb-6">
+              <div>
+                <div className="text-sm text-brand-gray uppercase tracking-widest font-bold mb-1">Valor da Inscrição</div>
+                <div className="text-3xl md:text-4xl font-black text-yellow-500">R$ 160,00</div>
+              </div>
+            </div>
+            
+            <div className="text-sm text-brand-gray uppercase tracking-widest font-bold mb-2">Sua Chave PIX</div>
+            <div className="flex items-center justify-center bg-brand-surface p-4 border border-brand-surface-light mb-2">
+               <span className="font-mono text-brand-white text-lg tracking-wider font-bold">{pixKey}</span>
+            </div>
+            <p className="text-xs text-brand-metallic text-center">* Enviar para Liga Futevôlei Hortolândia</p>
+          </div>
+
+          <a 
+            href={`https://wa.me/${orgPhone}?text=${wppMsg}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-[#25D366] text-white font-bold uppercase tracking-widest text-sm hover:bg-[#20bd5a] transition-colors mb-6"
+          >
+            <MessageCircle className="w-5 h-5" /> Enviar Comprovante no WhatsApp
+          </a>
+
           <button 
             onClick={() => navigate('/')} 
-            className="w-full px-8 py-4 bg-brand-white text-brand-black font-bold uppercase tracking-widest text-sm hover:bg-gray-200 transition-colors"
+            className="text-brand-gray text-xs hover:text-brand-white uppercase tracking-widest font-bold underline"
           >
             Voltar ao Início
           </button>
