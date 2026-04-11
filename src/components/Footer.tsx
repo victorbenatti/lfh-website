@@ -1,5 +1,6 @@
 import { MapPin } from 'lucide-react';
 import { FaInstagram } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
   return (
@@ -43,8 +44,8 @@ export const Footer: React.FC = () => {
       <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-brand-surface-light/50 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-brand-gray">
         <p>&copy; {new Date().getFullYear()} LFH - Liga de Futevôlei de Hortolândia. Todos os direitos reservados.</p>
         <div className="flex gap-4">
-          <a href="#" className="hover:text-brand-white transition-colors">Termos</a>
-          <a href="#" className="hover:text-brand-white transition-colors">Privacidade</a>
+          <span className="cursor-not-allowed text-brand-surface-light">Termos</span>
+          <Link to="/privacidade" className="hover:text-brand-white transition-colors">Privacidade</Link>
         </div>
       </div>
     </footer>

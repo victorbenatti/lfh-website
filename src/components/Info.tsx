@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Sun, MonitorPlay, Star } from 'lucide-react';
+import { Sun, MonitorPlay, Star } from 'lucide-react';
 
 export const Info: React.FC = () => {
   const containerVariants = {
@@ -39,54 +39,40 @@ export const Info: React.FC = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto"
         >
           {/* Card 1 */}
-          <motion.div variants={itemVariants} className="bg-brand-surface p-8 border border-brand-surface-light group hover:border-brand-gray transition-colors">
-            <div className="bg-brand-surface-light w-14 h-14 flex items-center justify-center mb-6 text-brand-white group-hover:scale-110 transition-transform">
-              <Sun className="w-7 h-7" />
+          <motion.div variants={itemVariants} className="bg-brand-surface p-10 border border-brand-surface-light group hover:border-brand-gray transition-colors flex flex-col items-center text-center">
+            <div className="bg-brand-surface-light w-16 h-16 flex items-center justify-center mb-6 text-brand-white group-hover:scale-110 transition-transform rounded-full">
+              <Sun className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold mb-3">5 Quadras</h3>
-            <p className="text-brand-metallic text-sm leading-relaxed">
-              Quadras de areia de alta qualidade, perfeitamente iluminadas para jogos diurnos e noturnos.
+            <h3 className="text-2xl font-bold mb-4">5 Quadras</h3>
+            <p className="text-brand-metallic text-base leading-relaxed">
+              Quadras de areia de <strong className="text-brand-white font-medium">alta qualidade</strong>, perfeitamente iluminadas para <strong className="text-brand-white font-medium">jogos diurnos e noturnos</strong>.
             </p>
           </motion.div>
 
           {/* Card 2 */}
-          <motion.div variants={itemVariants} className="bg-brand-surface p-8 border border-brand-surface-light group hover:border-brand-gray transition-colors">
-            <div className="bg-brand-surface-light w-14 h-14 flex items-center justify-center mb-6 text-brand-white group-hover:scale-110 transition-transform">
-              <MonitorPlay className="w-7 h-7" />
+          <motion.div variants={itemVariants} className="bg-brand-surface p-10 border border-brand-surface-light group hover:border-brand-gray transition-colors flex flex-col items-center text-center">
+            <div className="bg-brand-surface-light w-16 h-16 flex items-center justify-center mb-6 text-brand-white group-hover:scale-110 transition-transform rounded-full">
+              <MonitorPlay className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold mb-3">Telão de LED</h3>
-            <p className="text-brand-metallic text-sm leading-relaxed">
-              Acompanhe as chaves, pontuações em tempo real e replays dos melhores momentos.
+            <h3 className="text-2xl font-bold mb-4">Telão de LED</h3>
+            <p className="text-brand-metallic text-base leading-relaxed">
+              Acompanhe as chaves, <strong className="text-brand-white font-medium">pontuações em tempo real</strong> e replays dos <strong className="text-brand-white font-medium">melhores momentos</strong>.
             </p>
           </motion.div>
 
           {/* Card 3 */}
-          <motion.div variants={itemVariants} className="bg-brand-surface p-8 border border-brand-surface-light group hover:border-brand-gray transition-colors">
-            <div className="bg-brand-surface-light w-14 h-14 flex items-center justify-center mb-6 text-brand-white group-hover:scale-110 transition-transform">
-              <Star className="w-7 h-7" />
+          <motion.div variants={itemVariants} className="bg-brand-surface p-10 border border-brand-surface-light group hover:border-brand-gray transition-colors flex flex-col items-center text-center">
+            <div className="bg-brand-surface-light w-16 h-16 flex items-center justify-center mb-6 text-brand-white group-hover:scale-110 transition-transform rounded-full">
+              <Star className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold mb-3">Ambiente Premium</h3>
-            <p className="text-brand-metallic text-sm leading-relaxed">
-              Infraestrutura completa com bares, banheiros confortáveis e área de descanso para atletas.
+            <h3 className="text-2xl font-bold mb-4">Ambiente Premium</h3>
+            <p className="text-brand-metallic text-base leading-relaxed">
+              Infraestrutura completa com <strong className="text-brand-white font-medium">bares, banheiros confortáveis</strong> e ampla área de descanso para espectadores e atletas.
             </p>
           </motion.div>
-
-          {/* Card 4 */}
-          <motion.div variants={itemVariants} className="bg-brand-surface p-8 border border-brand-surface-light group hover:border-brand-gray transition-colors relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('/images/foto-1.png')] bg-cover bg-center opacity-20 grayscale mix-blend-overlay group-hover:scale-105 transition-transform duration-700" />
-            <div className="relative z-10">
-              <div className="bg-brand-white text-brand-black w-14 h-14 flex items-center justify-center mb-6">
-                <MapPin className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Localização</h3>
-              <p className="text-brand-white font-semibold text-sm mb-1">Koa House</p>
-              <p className="text-brand-metallic text-xs uppercase tracking-wider">Hortolândia - SP</p>
-            </div>
-          </motion.div>
-
         </motion.div>
       </div>
     </section>
