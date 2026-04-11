@@ -15,10 +15,31 @@ const CATEGORY_MAP: Record<string, string> = {
   'Masculino - Estreante': 'MASC_ESTREANTE',
   'Masculino - Iniciante': 'MASC_INICIANTE',
   'Masculino - Intermediário': 'MASC_INTERMEDIARIO',
-  'Masculino - A+B': 'MASC_BC', // MASC_BC no banco equivalente ao A+B
+  'Masculino - A+B': 'MASC_BC',
   'Misto - Estreante': 'MISTO_ESTREANTE',
   'Misto - Iniciante': 'MISTO_INICIANTE',
   'Feminino - Livre': 'FEMININO'
+};
+
+const formatCPF = (value: string) => {
+  return value
+    .replace(/\D/g, '')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+    .replace(/(-\d{2})\d+?$/, '$1');
+};
+
+const formatPhone = (value: string) => {
+  let v = value.replace(/\D/g, '');
+  if (v.length <= 10) {
+    v = v.replace(/(\d{2})(\d)/, '($1) $2');
+    v = v.replace(/(\d{4})(\d)/, '$1-$2');
+  } else {
+    v = v.replace(/(\d{2})(\d)/, '($1) $2');
+    v = v.replace(/(\d{5})(\d)/, '$1-$2');
+  }
+  return v.substring(0, 15);
 };
 
 export const RegistrationPage: React.FC = () => {
@@ -248,7 +269,7 @@ export const RegistrationPage: React.FC = () => {
             {/* Atleta 1 */}
             <div>
               <h3 className="text-xl font-bold uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-brand-surface-light pb-4">
-                <User className="w-5 h-5 text-brand-metallic" /> Capitão (Atleta 1)
+                <User className="w-5 h-5 text-brand-metallic" /> Atleta 1
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -269,7 +290,8 @@ export const RegistrationPage: React.FC = () => {
                     placeholder="(11) 99999-9999"
                     className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors placeholder:text-brand-surface-light"
                     value={player1Phone}
-                    onChange={e => setPlayer1Phone(e.target.value)}
+                    onChange={e => setPlayer1Phone(formatPhone(e.target.value))}
+                    maxLength={15}
                     required
                   />
                 </div>
@@ -280,7 +302,8 @@ export const RegistrationPage: React.FC = () => {
                     placeholder="000.000.000-00"
                     className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors placeholder:text-brand-surface-light"
                     value={player1Cpf}
-                    onChange={e => setPlayer1Cpf(e.target.value)}
+                    onChange={e => setPlayer1Cpf(formatCPF(e.target.value))}
+                    maxLength={14}
                     required
                   />
                 </div>
@@ -300,7 +323,7 @@ export const RegistrationPage: React.FC = () => {
             {/* Atleta 2 */}
             <div>
               <h3 className="text-xl font-bold uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-brand-surface-light pb-4">
-                <Users className="w-5 h-5 text-brand-metallic" /> Parceiro(a) (Atleta 2)
+                <Users className="w-5 h-5 text-brand-metallic" /> Atleta 2
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -321,7 +344,8 @@ export const RegistrationPage: React.FC = () => {
                     placeholder="(11) 99999-9999"
                     className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors placeholder:text-brand-surface-light"
                     value={player2Phone}
-                    onChange={e => setPlayer2Phone(e.target.value)}
+                    onChange={e => setPlayer2Phone(formatPhone(e.target.value))}
+                    maxLength={15}
                     required
                   />
                 </div>
@@ -332,7 +356,8 @@ export const RegistrationPage: React.FC = () => {
                     placeholder="000.000.000-00"
                     className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors placeholder:text-brand-surface-light"
                     value={player2Cpf}
-                    onChange={e => setPlayer2Cpf(e.target.value)}
+                    onChange={e => setPlayer2Cpf(formatCPF(e.target.value))}
+                    maxLength={14}
                     required
                   />
                 </div>
