@@ -45,7 +45,7 @@ const formatPhone = (value: string) => {
 export const RegistrationPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState(true);
 
   // Form states Atleta 1
   const [player1Name, setPlayer1Name] = useState('');
