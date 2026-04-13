@@ -391,7 +391,7 @@ export const RegistrationPage: React.FC = () => {
                   <label className="block text-brand-gray text-xs uppercase tracking-widest font-semibold mb-2">Data de Nascimento</label>
                   <input 
                     type="date"
-                    className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors placeholder:text-brand-surface-light"
+                    className="w-full min-w-0 box-border appearance-none bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors"
                     value={player1Dob}
                     onChange={e => setPlayer1Dob(e.target.value)}
                     required
@@ -456,7 +456,7 @@ export const RegistrationPage: React.FC = () => {
                   <label className="block text-brand-gray text-xs uppercase tracking-widest font-semibold mb-2">Data de Nascimento</label>
                   <input 
                     type="date"
-                    className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors placeholder:text-brand-surface-light"
+                    className="w-full min-w-0 box-border appearance-none bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors"
                     value={player2Dob}
                     onChange={e => setPlayer2Dob(e.target.value)}
                     required
