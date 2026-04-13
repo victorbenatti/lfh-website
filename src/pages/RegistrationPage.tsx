@@ -327,6 +327,12 @@ export const RegistrationPage: React.FC = () => {
                   </select>
                 </div>
               </div>
+
+              <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20">
+                <p className="text-xs text-brand-white font-medium text-center">
+                  ⚠ Atenção: O atleta ou dupla que competir em categoria técnica inferior ao seu nível real de jogo estará sujeito a <strong className="text-yellow-500">desclassificação imediata</strong> pelo comitê LFH.
+                </p>
+              </div>
             </div>
 
             {/* Atleta 1 */}
