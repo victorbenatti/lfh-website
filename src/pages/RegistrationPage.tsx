@@ -476,17 +476,22 @@ export const RegistrationPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-5 flex items-center justify-center gap-3 font-black text-lg uppercase tracking-widest transition-all ${
-                  loading 
-                  ? 'bg-brand-surface-light text-brand-gray cursor-not-allowed'
-                  : 'bg-brand-white text-brand-black hover:bg-gray-200'
-                }`}
-              >
-                {loading ? 'Processando Inscrição...' : <>Confirmar Inscrição e Ir Para o Pagamento</>}
-              </button>
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full py-5 flex items-center justify-center gap-3 font-black text-lg uppercase tracking-widest transition-all ${
+                    loading 
+                    ? 'bg-brand-surface-light text-brand-gray cursor-not-allowed'
+                    : 'bg-brand-white text-brand-black hover:bg-gray-200'
+                  }`}
+                >
+                  {loading ? 'Processando Inscrição...' : <>Confirmar Inscrição e Ir Para o Pagamento</>}
+                </button>
+                <p className="text-center text-xs text-brand-gray font-medium mt-4">
+                  ⚠ Atenção: Em caso de desistência, não realizamos o estorno ou devolução do valor da inscrição.
+                </p>
+              </div>
             </div>
           </motion.form>
         </div>
