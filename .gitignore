@@ -13,6 +13,7 @@ dist-ssr
 *.local
 .env
 schema.sql
+.firebase/
 
 # Editor directories and files
 .vscode/*
