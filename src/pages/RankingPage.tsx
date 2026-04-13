@@ -16,7 +16,7 @@ const CATEGORY_MAP: Record<string, string> = {
   'Masculino - Estreante': 'MASC_ESTREANTE',
   'Masculino - Iniciante': 'MASC_INICIANTE',
   'Masculino - Intermediário': 'MASC_INTERMEDIARIO',
-  'Masculino - A+B': 'MASC_BC',
+  'Masculino - A+B': 'MASC_AB',
   'Misto - Estreante': 'MISTO_ESTREANTE',
   'Misto - Iniciante': 'MISTO_INICIANTE',
   'Feminino - Livre': 'FEMININO'
