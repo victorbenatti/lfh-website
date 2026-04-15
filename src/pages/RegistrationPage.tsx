@@ -53,6 +53,7 @@ export const RegistrationPage: React.FC = () => {
   const [player1Phone, setPlayer1Phone] = useState('');
   const [player1Cpf, setPlayer1Cpf] = useState('');
   const [player1Dob, setPlayer1Dob] = useState('');
+  const [player1Size, setPlayer1Size] = useState('');
 
   // Form states Atleta 2
   const [player2Name, setPlayer2Name] = useState('');
@@ -60,6 +61,7 @@ export const RegistrationPage: React.FC = () => {
   const [player2Phone, setPlayer2Phone] = useState('');
   const [player2Cpf, setPlayer2Cpf] = useState('');
   const [player2Dob, setPlayer2Dob] = useState('');
+  const [player2Size, setPlayer2Size] = useState('');
   
   const [category, setCategory] = useState('Masculino');
   const [level, setLevel] = useState('Estreante');
@@ -227,7 +229,9 @@ export const RegistrationPage: React.FC = () => {
           edicao_id: edicaoData.id,
           categoria: categoriaDb,
           valor_inscricao: totalPrice,
-          status: 'PENDENTE'
+          status: 'PENDENTE',
+          tamanho_p1: player1Size,
+          tamanho_p2: player2Size
         })
         .select('id')
         .single();
@@ -239,8 +243,8 @@ export const RegistrationPage: React.FC = () => {
         throw subError;
       }
 
-      setPlayer1Name(''); setPlayer1Email(''); setPlayer1Phone(''); setPlayer1Cpf(''); setPlayer1Dob('');
-      setPlayer2Name(''); setPlayer2Email(''); setPlayer2Phone(''); setPlayer2Cpf(''); setPlayer2Dob('');
+      setPlayer1Name(''); setPlayer1Email(''); setPlayer1Phone(''); setPlayer1Cpf(''); setPlayer1Dob(''); setPlayer1Size('');
+      setPlayer2Name(''); setPlayer2Email(''); setPlayer2Phone(''); setPlayer2Cpf(''); setPlayer2Dob(''); setPlayer2Size('');
       
       navigate(`/pagamento/${inscricaoData.id}`);
     } catch (err: any) {
@@ -397,6 +401,21 @@ export const RegistrationPage: React.FC = () => {
                     required
                   />
                 </div>
+                <div>
+                  <label className="block text-brand-gray text-xs uppercase tracking-widest font-semibold mb-2">Tamanho do Uniforme</label>
+                  <select
+                    className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors"
+                    value={player1Size}
+                    onChange={e => setPlayer1Size(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>Selecione o tamanho</option>
+                    <option value="P">P</option>
+                    <option value="M">M</option>
+                    <option value="G">G</option>
+                    <option value="GG">GG</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -461,6 +480,21 @@ export const RegistrationPage: React.FC = () => {
                     onChange={e => setPlayer2Dob(e.target.value)}
                     required
                   />
+                </div>
+                <div>
+                  <label className="block text-brand-gray text-xs uppercase tracking-widest font-semibold mb-2">Tamanho do Uniforme</label>
+                  <select
+                    className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors"
+                    value={player2Size}
+                    onChange={e => setPlayer2Size(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>Selecione o tamanho</option>
+                    <option value="P">P</option>
+                    <option value="M">M</option>
+                    <option value="G">G</option>
+                    <option value="GG">GG</option>
+                  </select>
                 </div>
               </div>
             </div>

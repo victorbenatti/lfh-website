@@ -28,6 +28,8 @@ export const PaymentPage: React.FC = () => {
             valor_inscricao,
             categoria,
             status,
+            tamanho_p1,
+            tamanho_p2,
             duplas (
               atleta1:atleta_1_id (nome_completo),
               atleta2:atleta_2_id (nome_completo)
@@ -106,8 +108,14 @@ export const PaymentPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-10">
                   <div>
                     <h3 className="text-xs uppercase tracking-widest font-semibold text-brand-gray mb-1">Dupla Registrada</h3>
-                    <p className="font-medium text-lg">{atleta1Nome}</p>
-                    <p className="font-medium text-lg">{atleta2Nome}</p>
+                    <p className="font-medium text-lg flex items-center gap-2">
+                      {atleta1Nome}
+                      {data?.tamanho_p1 && <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-surface-light text-brand-metallic px-2 py-0.5 rounded-sm">Tam. {data.tamanho_p1}</span>}
+                    </p>
+                    <p className="font-medium text-lg flex items-center gap-2">
+                      {atleta2Nome}
+                      {data?.tamanho_p2 && <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-surface-light text-brand-metallic px-2 py-0.5 rounded-sm">Tam. {data.tamanho_p2}</span>}
+                    </p>
                   </div>
                   <div>
                     <h3 className="text-xs uppercase tracking-widest font-semibold text-brand-gray mb-1">Status Atual</h3>

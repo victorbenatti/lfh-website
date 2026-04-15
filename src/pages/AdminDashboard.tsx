@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
-import { Settings, Check, Clock, Link as LinkIcon, Filter, Search, Download, Trash2, Edit2, Users, User, DollarSign, Wallet, X, LogOut } from 'lucide-react';
+import { Settings, Check, Clock, Link as LinkIcon, Filter, Search, Download, Trash2, Edit2, Users, User, DollarSign, Wallet, X, LogOut, Shirt } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface Atleta {
@@ -23,6 +23,8 @@ interface Inscricao {
   status: string;
   created_at: string;
   valor_inscricao: number;
+  tamanho_p1: string | null;
+  tamanho_p2: string | null;
   duplas: Dupla;
 }
 
@@ -43,6 +45,8 @@ export const AdminDashboard: React.FC = () => {
   const [editItem, setEditItem] = useState<Inscricao | null>(null);
   const [editCategoria, setEditCategoria] = useState('');
   const [editStatus, setEditStatus] = useState('');
+  const [editTamanhoP1, setEditTamanhoP1] = useState('');
+  const [editTamanhoP2, setEditTamanhoP2] = useState('');
 
   // Delete Modal & Success States
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -59,7 +63,7 @@ export const AdminDashboard: React.FC = () => {
     const { data, error } = await supabase
       .from('inscricoes')
       .select(`
-        id, categoria, status, created_at, valor_inscricao,
+        id, categoria, status, created_at, valor_inscricao, tamanho_p1, tamanho_p2,
         duplas (
           id,
           atleta_1:atletas!duplas_atleta_1_id_fkey(id, nome_completo, whatsapp, cpf),
@@ -118,6 +122,8 @@ export const AdminDashboard: React.FC = () => {
     setEditItem(item);
     setEditCategoria(item.categoria);
     setEditStatus(item.status);
+    setEditTamanhoP1(item.tamanho_p1 || '');
+    setEditTamanhoP2(item.tamanho_p2 || '');
     setIsEditModalOpen(true);
   };
 
@@ -125,14 +131,14 @@ export const AdminDashboard: React.FC = () => {
     if (!editItem) return;
     const { error } = await supabase
       .from('inscricoes')
-      .update({ categoria: editCategoria, status: editStatus })
+      .update({ categoria: editCategoria, status: editStatus, tamanho_p1: editTamanhoP1 || null, tamanho_p2: editTamanhoP2 || null })
       .eq('id', editItem.id);
 
     if (error) {
       alert('Erro ao salvar as modificações.');
     } else {
       setInscricoes(prev => prev.map(sub => 
-        sub.id === editItem.id ? { ...sub, categoria: editCategoria, status: editStatus } : sub
+        sub.id === editItem.id ? { ...sub, categoria: editCategoria, status: editStatus, tamanho_p1: editTamanhoP1 || null, tamanho_p2: editTamanhoP2 || null } : sub
       ));
       setIsEditModalOpen(false);
     }
@@ -144,7 +150,7 @@ export const AdminDashboard: React.FC = () => {
 
   const exportToCSV = () => {
     if (inscricoes.length === 0) return;
-    const headers = ['Data', 'Categoria', 'Atleta 1', 'Atleta 2', 'WhatsApps', 'Valor (R$)', 'Status'];
+    const headers = ['Data', 'Categoria', 'Atleta 1', 'Atleta 2', 'WhatsApps', 'Tamanho Atleta 1', 'Tamanho Atleta 2', 'Valor (R$)', 'Status'];
     
     const rows = inscricoes.map(sub => {
        const w1 = sub.duplas?.atleta_1?.whatsapp || '';
@@ -155,6 +161,8 @@ export const AdminDashboard: React.FC = () => {
           `"${sub.duplas?.atleta_1?.nome_completo || ''}"`,
           `"${sub.duplas?.atleta_2?.nome_completo || ''}"`,
           `"${w1} e ${w2}"`,
+          sub.tamanho_p1 || '',
+          sub.tamanho_p2 || '',
           sub.valor_inscricao,
           sub.status
        ].join(',');
@@ -175,6 +183,13 @@ export const AdminDashboard: React.FC = () => {
   const totalInscritos = inscricoes.length * 2;
   const valorTotal = inscricoes.reduce((acc, curr) => acc + (curr.valor_inscricao || 0), 0);
   const valorPago = inscricoes.filter(i => i.status === 'PAGO').reduce((acc, curr) => acc + (curr.valor_inscricao || 0), 0);
+
+  // Uniform size counts
+  const sizeCounts: Record<string, number> = { P: 0, M: 0, G: 0, GG: 0 };
+  inscricoes.forEach(sub => {
+    if (sub.tamanho_p1 && sizeCounts[sub.tamanho_p1] !== undefined) sizeCounts[sub.tamanho_p1]++;
+    if (sub.tamanho_p2 && sizeCounts[sub.tamanho_p2] !== undefined) sizeCounts[sub.tamanho_p2]++;
+  });
 
   // Filters
   const filteredInscricoes = inscricoes.filter(sub => {
@@ -207,7 +222,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* METRICS CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
            <div className="bg-brand-surface border border-brand-surface-light p-4 xl:p-6 flex items-center gap-4 xl:gap-6">
               <div className="w-12 h-12 xl:w-14 xl:h-14 rounded-full border border-brand-surface-light bg-brand-black flex items-center justify-center text-purple-400 shrink-0">
                  <Users className="w-5 h-5 xl:w-6 xl:h-6" />
@@ -245,6 +260,22 @@ export const AdminDashboard: React.FC = () => {
               <div>
                  <p className="text-[10px] xl:text-[11px] text-brand-gray font-bold uppercase tracking-widest mb-1 line-clamp-1">Valor Pago</p>
                  <h3 className="text-lg xl:text-2xl font-black text-brand-white">R$ {valorPago},00</h3>
+              </div>
+           </div>
+
+           {/* Uniform Sizes Card */}
+           <div className="bg-brand-surface border border-brand-surface-light p-4 xl:p-6 flex items-center gap-4 xl:gap-6">
+              <div className="w-12 h-12 xl:w-14 xl:h-14 rounded-full border border-brand-surface-light bg-brand-black flex items-center justify-center text-pink-400 shrink-0">
+                 <Shirt className="w-5 h-5 xl:w-6 xl:h-6" />
+              </div>
+              <div>
+                 <p className="text-[10px] xl:text-[11px] text-brand-gray font-bold uppercase tracking-widest mb-1 line-clamp-1">Uniformes</p>
+                 <div className="flex items-center gap-2 text-sm font-bold text-brand-white flex-wrap">
+                    <span className="text-pink-300">P:{sizeCounts.P}</span>
+                    <span className="text-blue-300">M:{sizeCounts.M}</span>
+                    <span className="text-yellow-300">G:{sizeCounts.G}</span>
+                    <span className="text-green-300">GG:{sizeCounts.GG}</span>
+                 </div>
               </div>
            </div>
         </div>
@@ -301,6 +332,7 @@ export const AdminDashboard: React.FC = () => {
                     <th className="py-4 px-6">Categoria</th>
                     <th className="py-4 px-6">Atleta 1</th>
                     <th className="py-4 px-6">Atleta 2</th>
+                    <th className="py-4 px-6 text-center">Uniformes</th>
                     <th className="py-4 px-6 text-center">Valor / Status</th>
                     <th className="py-4 px-6 text-right">Data</th>
                     <th className="py-4 px-6 text-center">Ações</th>
@@ -309,7 +341,7 @@ export const AdminDashboard: React.FC = () => {
                 <tbody className="divide-y divide-brand-surface-light">
                   {filteredInscricoes.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-brand-metallic">Nenhuma inscrição combinando com os filtros.</td>
+                      <td colSpan={7} className="py-8 text-center text-brand-metallic">Nenhuma inscrição combinando com os filtros.</td>
                     </tr>
                   ) : filteredInscricoes.map((sub) => (
                     <tr key={sub.id} className="hover:bg-brand-surface-light/20 transition-colors group">
@@ -323,6 +355,9 @@ export const AdminDashboard: React.FC = () => {
                       <td className="py-4 px-6 text-sm">
                         <div className="font-medium text-brand-white">{sub.duplas?.atleta_2?.nome_completo}</div>
                         <div className="text-brand-metallic font-mono text-[10px] sm:text-xs">{sub.duplas?.atleta_2?.whatsapp}</div>
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        <span className="font-bold text-sm text-brand-white">{sub.tamanho_p1 || '—'} / {sub.tamanho_p2 || '—'}</span>
                       </td>
                       <td className="py-4 px-6 text-center">
                         <div className="font-mono text-sm text-brand-white font-bold mb-1">R$ {sub.valor_inscricao},00</div>
@@ -420,6 +455,37 @@ export const AdminDashboard: React.FC = () => {
                            <option value="PAGO">Pago</option>
                            <option value="CANCELADO">Cancelado</option>
                         </select>
+                     </div>
+
+                     <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="block text-brand-gray text-xs uppercase tracking-widest font-semibold mb-2">Uniforme Atleta 1</label>
+                           <select 
+                              className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors uppercase text-sm font-semibold tracking-wider"
+                              value={editTamanhoP1}
+                              onChange={(e) => setEditTamanhoP1(e.target.value)}
+                           >
+                              <option value="">—</option>
+                              <option value="P">P</option>
+                              <option value="M">M</option>
+                              <option value="G">G</option>
+                              <option value="GG">GG</option>
+                           </select>
+                        </div>
+                        <div>
+                           <label className="block text-brand-gray text-xs uppercase tracking-widest font-semibold mb-2">Uniforme Atleta 2</label>
+                           <select 
+                              className="w-full bg-brand-black border border-brand-surface-light p-4 text-brand-white focus:outline-none focus:border-brand-white transition-colors uppercase text-sm font-semibold tracking-wider"
+                              value={editTamanhoP2}
+                              onChange={(e) => setEditTamanhoP2(e.target.value)}
+                           >
+                              <option value="">—</option>
+                              <option value="P">P</option>
+                              <option value="M">M</option>
+                              <option value="G">G</option>
+                              <option value="GG">GG</option>
+                           </select>
+                        </div>
                      </div>
 
                      <div className="flex items-center gap-4 pt-4 border-t border-brand-surface-light">
