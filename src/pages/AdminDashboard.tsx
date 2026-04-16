@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
-import { Settings, Check, Clock, Link as LinkIcon, Filter, Search, Download, Trash2, Edit2, Users, User, DollarSign, Wallet, X, LogOut, Shirt } from 'lucide-react';
+import { Settings, Check, Clock, Link as LinkIcon, Filter, Search, Download, Trash2, Edit2, Users, User, DollarSign, Wallet, X, LogOut, Shirt, History } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface Atleta {
@@ -28,6 +28,16 @@ interface Inscricao {
   duplas: Dupla;
 }
 
+interface LogAtividade {
+  id: string;
+  admin_email: string;
+  acao: string;
+  tabela_afetada: string;
+  registro_id: string;
+  detalhes: any;
+  created_at: string;
+}
+
 export const AdminDashboard: React.FC = () => {
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +62,11 @@ export const AdminDashboard: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Inscricao | null>(null);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+
+  // Activity Logs State
+  const [showLogs, setShowLogs] = useState(false);
+  const [logs, setLogs] = useState<LogAtividade[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
   const CATEGORIAS = [
     'TODAS', 'MASC_ESTREANTE', 'MASC_INICIANTE', 'MASC_INTERMEDIARIO', 
@@ -80,12 +95,55 @@ export const AdminDashboard: React.FC = () => {
     setLoading(false);
   };
 
+  // --- Activity Log Helper ---
+  const registrarLog = async (acao: string, registroId: string, detalhes: Record<string, any>) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const adminId = userData?.user?.id || null;
+      const adminEmail = userData?.user?.email || 'desconhecido';
+
+      const { error } = await supabase.from('logs_atividade').insert({
+        admin_id: adminId,
+        admin_email: adminEmail,
+        acao,
+        tabela_afetada: 'inscricoes',
+        registro_id: registroId,
+        detalhes,
+      });
+
+      if (error) {
+        console.warn('Erro ao inserir log de atividade (verifique RLS policies):', error.message, error);
+      }
+    } catch (err) {
+      console.warn('Falha ao registrar log de atividade:', err);
+    }
+  };
+
+  const fetchLogs = async () => {
+    setLoadingLogs(true);
+    const { data, error } = await supabase
+      .from('logs_atividade')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (!error && data) {
+      setLogs(data as LogAtividade[]);
+    }
+    setLoadingLogs(false);
+  };
+
   useEffect(() => {
     fetchInscricoes();
   }, []);
 
+  useEffect(() => {
+    if (showLogs) fetchLogs();
+  }, [showLogs]);
+
   const togglePaymentStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'PENDENTE' ? 'PAGO' : 'PENDENTE';
+    const sub = inscricoes.find(s => s.id === id);
     const { error } = await supabase
       .from('inscricoes')
       .update({ status: newStatus })
@@ -94,7 +152,12 @@ export const AdminDashboard: React.FC = () => {
     if (error) {
       alert('Erro ao atualizar status do pagamento.');
     } else {
-      setInscricoes(prev => prev.map(sub => sub.id === id ? { ...sub, status: newStatus } : sub));
+      await registrarLog('ALTERACAO_PAGAMENTO', id, {
+        dupla: `${sub?.duplas?.atleta_1?.nome_completo} / ${sub?.duplas?.atleta_2?.nome_completo}`,
+        de: currentStatus,
+        para: newStatus,
+      });
+      setInscricoes(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
     }
   };
 
@@ -110,11 +173,17 @@ export const AdminDashboard: React.FC = () => {
     if (error) {
       alert('Erro ao excluir inscrição: ' + error.message);
     } else {
+      await registrarLog('EXCLUSAO', itemToDelete.id, {
+        atleta_1: itemToDelete.duplas?.atleta_1?.nome_completo,
+        atleta_2: itemToDelete.duplas?.atleta_2?.nome_completo,
+        categoria: itemToDelete.categoria,
+        valor: itemToDelete.valor_inscricao,
+      });
       setInscricoes(prev => prev.filter(sub => sub.id !== itemToDelete.id));
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
       setIsSuccessModalOpen(true);
-      setTimeout(() => setIsSuccessModalOpen(false), 2500); // Auto close
+      setTimeout(() => setIsSuccessModalOpen(false), 2500);
     }
   };
 
@@ -137,6 +206,13 @@ export const AdminDashboard: React.FC = () => {
     if (error) {
       alert('Erro ao salvar as modificações.');
     } else {
+      await registrarLog('EDICAO', editItem.id, {
+        dupla: `${editItem.duplas?.atleta_1?.nome_completo} / ${editItem.duplas?.atleta_2?.nome_completo}`,
+        categoria: { de: editItem.categoria, para: editCategoria },
+        status: { de: editItem.status, para: editStatus },
+        tamanho_p1: { de: editItem.tamanho_p1, para: editTamanhoP1 || null },
+        tamanho_p2: { de: editItem.tamanho_p2, para: editTamanhoP2 || null },
+      });
       setInscricoes(prev => prev.map(sub => 
         sub.id === editItem.id ? { ...sub, categoria: editCategoria, status: editStatus, tamanho_p1: editTamanhoP1 || null, tamanho_p2: editTamanhoP2 || null } : sub
       ));
@@ -212,6 +288,16 @@ export const AdminDashboard: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowLogs(!showLogs)}
+              className={`px-5 py-2 border text-sm transition-colors flex items-center gap-2 font-bold uppercase tracking-widest ${
+                showLogs 
+                  ? 'border-purple-500/50 text-purple-400 bg-purple-500/10 hover:bg-purple-500/20' 
+                  : 'border-brand-surface-light text-brand-gray hover:text-brand-white hover:border-brand-gray'
+              }`}
+            >
+              <History className="w-4 h-4" /> {showLogs ? 'Ver Inscrições' : 'Histórico'}
+            </button>
             <Link to="/" className="px-5 py-2 border border-brand-surface-light text-brand-gray text-sm hover:text-brand-white hover:border-brand-gray transition-colors flex items-center gap-2 font-bold uppercase tracking-widest">
               <LinkIcon className="w-4 h-4" /> Ver Site
             </Link>
@@ -401,6 +487,92 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </motion.div>
         )}
+
+        {/* ACTIVITY LOGS PANEL */}
+        {showLogs && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold uppercase tracking-widest flex items-center gap-2">
+                <History className="w-5 h-5 text-purple-400" /> Histórico de Atividade
+              </h2>
+              <button onClick={fetchLogs} className="text-xs text-brand-gray hover:text-brand-white uppercase tracking-widest font-bold transition-colors">
+                Atualizar
+              </button>
+            </div>
+
+            {loadingLogs ? (
+              <div className="text-center py-12 text-brand-metallic animate-pulse">Carregando logs...</div>
+            ) : logs.length === 0 ? (
+              <div className="bg-brand-surface border border-brand-surface-light p-8 text-center text-brand-metallic">
+                Nenhum log de atividade encontrado.
+              </div>
+            ) : (
+              <div className="bg-brand-surface border border-brand-surface-light overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left min-w-[700px] border-collapse">
+                    <thead className="bg-brand-surface-light/50 border-b border-brand-surface-light text-brand-gray uppercase tracking-wider text-xs font-bold">
+                      <tr>
+                        <th className="py-3 px-5">Data / Hora</th>
+                        <th className="py-3 px-5">Admin</th>
+                        <th className="py-3 px-5">Ação</th>
+                        <th className="py-3 px-5">Detalhes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-brand-surface-light">
+                      {logs.map(log => {
+                        const acaoLabel: Record<string, string> = {
+                          'EXCLUSAO': 'Exclusão',
+                          'EDICAO': 'Edição',
+                          'ALTERACAO_PAGAMENTO': 'Pagamento',
+                        };
+                        const acaoColor: Record<string, string> = {
+                          'EXCLUSAO': 'text-red-400 bg-red-500/10 border-red-500/30',
+                          'EDICAO': 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30',
+                          'ALTERACAO_PAGAMENTO': 'text-green-400 bg-green-500/10 border-green-500/30',
+                        };
+
+                        let descricao = '';
+                        const d = log.detalhes;
+                        if (log.acao === 'EXCLUSAO') {
+                          descricao = `Removeu ${d?.atleta_1 || '?'} e ${d?.atleta_2 || '?'}`;
+                        } else if (log.acao === 'EDICAO') {
+                          const partes: string[] = [];
+                          if (d?.categoria?.de !== d?.categoria?.para) partes.push(`Cat: ${d?.categoria?.de} → ${d?.categoria?.para}`);
+                          if (d?.status?.de !== d?.status?.para) partes.push(`Status: ${d?.status?.de} → ${d?.status?.para}`);
+                          if (d?.tamanho_p1?.de !== d?.tamanho_p1?.para) partes.push(`Tam P1: ${d?.tamanho_p1?.de || '—'} → ${d?.tamanho_p1?.para || '—'}`);
+                          if (d?.tamanho_p2?.de !== d?.tamanho_p2?.para) partes.push(`Tam P2: ${d?.tamanho_p2?.de || '—'} → ${d?.tamanho_p2?.para || '—'}`);
+                          descricao = `${d?.dupla || ''} — ${partes.join(', ') || 'Sem alterações'}`;
+                        } else if (log.acao === 'ALTERACAO_PAGAMENTO') {
+                          descricao = `${d?.dupla || ''} — ${d?.de} → ${d?.para}`;
+                        }
+
+                        return (
+                          <tr key={log.id} className="hover:bg-brand-surface-light/20 transition-colors">
+                            <td className="py-3 px-5 text-xs font-mono text-brand-gray whitespace-nowrap">
+                              {new Date(log.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="py-3 px-5 text-xs text-brand-metallic truncate max-w-[180px]">{log.admin_email}</td>
+                            <td className="py-3 px-5">
+                              <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${acaoColor[log.acao] || 'text-brand-gray bg-brand-surface-light border-brand-surface-light'}`}>
+                                {acaoLabel[log.acao] || log.acao}
+                              </span>
+                            </td>
+                            <td className="py-3 px-5 text-xs text-brand-white leading-relaxed">{descricao}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
       </div>
 
       {/* MODAL DE EDIÇÃO */}
